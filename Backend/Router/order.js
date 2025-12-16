@@ -28,4 +28,14 @@ router.post('/create', async (req, res) => {
   }
 });
 
+// GET /api/order/user/:email
+router.get('/user/:email', async (req, res) => {
+  try {
+    const orders = await Order.find({ customerEmail: req.params.email }).sort({ createdAt: -1 });
+    res.json({ success: true, orders });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 module.exports = router;
