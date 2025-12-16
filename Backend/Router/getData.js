@@ -25,6 +25,39 @@ router.get('/orders', async (req, res) => {
   }
 });
 
+// GET /api/stats - Fetch dashboard statistics
+router.get('/stats', async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments({});
+    const totalProducts = await Product.countDocuments({});
+    const totalOrders = await Order.countDocuments({});
+    
+    // Calculate total revenue
+    const revenueResult = await Order.aggregate([
+      { $group: { _id: null, totalRevenue: { $sum: "$totalPrice" } } }
+    ]);
+    const totalRevenue = revenueResult.length > 0 ? revenueResult[0].totalRevenue : 0;
+    
+    // Calculate order status counts
+    const pendingOrders = await Order.countDocuments({ orderStatus: 'Pending' });
+    const deliveredOrders = await Order.countDocuments({ orderStatus: 'Delivered' });
+    
+    res.json({ 
+      success: true, 
+      stats: {
+        totalUsers,
+        totalProducts,
+        totalOrders,
+        totalRevenue,
+        pendingOrders,
+        deliveredOrders
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // GET /api/products - Fetch all products
 router.get('/products', async (req, res) => {
   try {
